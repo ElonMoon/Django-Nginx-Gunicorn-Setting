@@ -1,0 +1,35 @@
+upstream app_server {
+    server unix:/tmp/gunicorn.sock;
+}
+
+server {
+    listen 80;
+
+    server_name localhost;
+
+    charset utf-8;
+
+    client_max_body_size 128M;
+
+    location / {
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_set_header Host $http_host;
+
+        proxy_redirect off;
+
+        if (!-f $request) {
+            proxy_pass http://app_server;
+            break;
+        }
+    }
+
+    location /static/ {
+        alias /srv/project/.static;
+    }
+
+    location /media/ {
+        alias /srv/project/.media;
+    }
+
+}
